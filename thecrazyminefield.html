@@ -1,0 +1,1642 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>The Crazy Minefield!</title>
+<body>
+
+<canvas id="myCanvas" width="1910" height="909" style="border:1px solid #d3d3d3;" onclick="clickMinefield(event)">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<img id="ingamepic" width="1910" height="909" src="The Crazy Minefield_gfx_ingame.png" hidden="true">
+<img id="endingpic" width="1910" height="909" src="The Crazy Minefield_gfx_results.png" hidden="true">
+<img id="titlepic" width="1910" height="909" src="The Crazy Minefield_gfx_title.png" hidden="true">
+<img id="instructionspic" width="1910" height="909" src="The Crazy Minefield_gfx_instructions.png" hidden="true">
+<img id="idSpriteArrow" width="22" height="39" src="The Crazy Minefield_gfx_arrow.png" hidden="true">
+<img id="idSpritePlayer1" width="22" height="22" src="The Crazy Minefield_gfx_player1.png" hidden="true">
+<img id="idSpritePlayer2" width="22" height="22" src="The Crazy Minefield_gfx_player2.png" hidden="true">
+<img id="idSpritePlayer3" width="22" height="22" src="The Crazy Minefield_gfx_player3.png" hidden="true">
+<img id="idSpritePlayer4" width="22" height="22" src="The Crazy Minefield_gfx_player4.png" hidden="true">
+<img id="idSpriteInactivetile" width="22" height="22" src="The Crazy Minefield_gfx_inactivetile.png" hidden="true">
+<img id="idSpriteSafetile" width="22" height="22" src="The Crazy Minefield_gfx_safetile.png" hidden="true">
+<img id="idSpriteMine" width="22" height="22" src="The Crazy Minefield_gfx_mine.png" hidden="true">
+<img id="idSpriteFlag" width="22" height="22" src="The Crazy Minefield_gfx_flag.png" hidden="true">
+<img id="idSpriteDigit0" width="23" height="28" src="The Crazy Minefield_gfx_digit0.png" hidden="true">
+<img id="idSpriteDigit1" width="23" height="28" src="The Crazy Minefield_gfx_digit1.png" hidden="true">
+<img id="idSpriteDigit2" width="23" height="28" src="The Crazy Minefield_gfx_digit2.png" hidden="true">
+<img id="idSpriteDigit3" width="23" height="28" src="The Crazy Minefield_gfx_digit3.png" hidden="true">
+<img id="idSpriteDigit4" width="23" height="28" src="The Crazy Minefield_gfx_digit4.png" hidden="true">
+<img id="idSpriteDigit5" width="23" height="28" src="The Crazy Minefield_gfx_digit5.png" hidden="true">
+<img id="idSpriteDigit6" width="23" height="28" src="The Crazy Minefield_gfx_digit6.png" hidden="true">
+<img id="idSpriteDigit7" width="23" height="28" src="The Crazy Minefield_gfx_digit7.png" hidden="true">
+<img id="idSpritePlayer1dead" width="277" height="32" src="The Crazy Minefield_gfx_player1dead.png" hidden="true">
+<img id="idSpritePlayer2dead" width="277" height="32" src="The Crazy Minefield_gfx_player2dead.png" hidden="true">
+<img id="idSpritePlayer3dead" width="277" height="32" src="The Crazy Minefield_gfx_player3dead.png" hidden="true">
+<img id="idSpritePlayer4dead" width="277" height="32" src="The Crazy Minefield_gfx_player4dead.png" hidden="true">
+<img id="idSpritePlayer1safe" width="277" height="32" src="The Crazy Minefield_gfx_player1safe.png" hidden="true">
+<img id="idSpritePlayer2safe" width="277" height="32" src="The Crazy Minefield_gfx_player2safe.png" hidden="true">
+<img id="idSpritePlayer3safe" width="277" height="32" src="The Crazy Minefield_gfx_player3safe.png" hidden="true">
+<img id="idSpritePlayer4safe" width="277" height="32" src="The Crazy Minefield_gfx_player4safe.png" hidden="true">
+
+<script src="pixi.min.js"></script>
+<script>
+
+// Tile types:
+// 0 = UNVISITED TILE
+// 1 = SAFE TILE
+// 2 = MINE!!
+// 3 = VISIBLE MINE
+// 4 = unused
+// 5 = PLAYER 1
+// 6 = PLAYER 2
+// 7 = PLAYER 3
+// 8 = PLAYER 4
+// 9 = FLAGGED TILE (NO MINE UNDERNEATH)
+// 10 = FLAGGED TILE (MINE UNDERNEATH)
+
+const screenWidth = 1910;
+const screenHeight = 909;
+const gameState_title = 0;
+const gameState_ingame = 1;
+const gameState_gameover = 2;
+const gameState_inputNumber = 3;
+const gameState_instructions = 4;
+
+const snd_xplode1 = new Audio("The Crazy Minefield_sfx_explode.wav");
+const snd_xplode2 = new Audio("The Crazy Minefield_sfx_explode.wav");
+const snd_xplode3 = new Audio("The Crazy Minefield_sfx_explode.wav");
+const snd_xplode4 = new Audio("The Crazy Minefield_sfx_explode.wav");
+const snd_minenearby = new Audio("The Crazy Minefield_sfx_minenearby.wav");
+const snd_music_ingame = new Audio("The Crazy Minefield_sfx_musicIngame.wav");
+const snd_player1safe = new Audio("The Crazy Minefield_sfx_safe.wav");
+const snd_player2safe = new Audio("The Crazy Minefield_sfx_safe.wav");
+const snd_player3safe = new Audio("The Crazy Minefield_sfx_safe.wav");
+const snd_player4safe = new Audio("The Crazy Minefield_sfx_safe.wav");
+
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+var myCanvascanvas = document.getElementById("myCanvas");
+var myCanvasctx = myCanvascanvas.getContext("2d");
+var myCanvaspiccy = myCanvasctx.createImageData(1910, 909);
+
+var ingameimagecanvas = document.getElementById("myCanvas");
+var ingameimagectx = ingameimagecanvas.getContext("2d");
+var ingameimagedata = ingameimagectx.createImageData(1910, 909);
+var ingameimage = document.getElementById("ingamepic");
+
+var endingimagecanvas = document.getElementById("myCanvas");
+var endingimagectx = endingimagecanvas.getContext("2d");
+var endingimagedata = endingimagectx.createImageData(1910, 909);
+var endingimage = document.getElementById("endingpic");
+
+var titleimagecanvas = document.getElementById("myCanvas");
+var titleimagectx = titleimagecanvas.getContext("2d");
+var titleimagedata = titleimagectx.createImageData(1910, 909);
+var titleimage = document.getElementById("titlepic");
+
+var instructionsimagecanvas = document.getElementById("myCanvas");
+var instructionsimagectx = instructionsimagecanvas.getContext("2d");
+var instructionsimagedata = instructionsimagectx.createImageData(1910, 909);
+var instructionsimage = document.getElementById("instructionspic");
+
+var sprite_arrowcanvas = document.getElementById("myCanvas");
+var sprite_arrowctx = sprite_arrowcanvas.getContext("2d");
+var sprite_arrowdata = sprite_arrowctx.createImageData(22, 39);
+var sprite_arrow = document.getElementById("idSpriteArrow");
+
+var sprite_player1canvas = document.getElementById("myCanvas");
+var sprite_player1ctx = sprite_player1canvas.getContext("2d");
+var sprite_player1data = sprite_player1ctx.createImageData(22, 22);
+var sprite_player1 = document.getElementById("idSpritePlayer1");
+
+var sprite_player2canvas = document.getElementById("myCanvas");
+var sprite_player2ctx = sprite_player2canvas.getContext("2d");
+var sprite_player2data = sprite_player2ctx.createImageData(22, 22);
+var sprite_player2 = document.getElementById("idSpritePlayer2");
+
+var sprite_player3canvas = document.getElementById("myCanvas");
+var sprite_player3ctx = sprite_player3canvas.getContext("2d");
+var sprite_player3data = sprite_player3ctx.createImageData(22, 22);
+var sprite_player3 = document.getElementById("idSpritePlayer3");
+
+var sprite_player4canvas = document.getElementById("myCanvas");
+var sprite_player4ctx = sprite_player4canvas.getContext("2d");
+var sprite_player4data = sprite_player4ctx.createImageData(22, 22);
+var sprite_player4 = document.getElementById("idSpritePlayer4");
+
+var sprite_inactivetilecanvas = document.getElementById("myCanvas");
+var sprite_inactivetilectx = sprite_inactivetilecanvas.getContext("2d");
+var sprite_inactivetiledata = sprite_inactivetilectx.createImageData(22, 22);
+var sprite_inactivetile = document.getElementById("idSpriteInactivetile");
+
+var sprite_safetilecanvas = document.getElementById("myCanvas");
+var sprite_safetilectx = sprite_safetilecanvas.getContext("2d");
+var sprite_safetiledata = sprite_safetilectx.createImageData(22, 22);
+var sprite_safetile = document.getElementById("idSpriteSafetile");
+
+var sprite_minecanvas = document.getElementById("myCanvas");
+var sprite_minectx = sprite_minecanvas.getContext("2d");
+var sprite_minedata = sprite_minectx.createImageData(22, 22);
+var sprite_mine = document.getElementById("idSpriteMine");
+
+var sprite_flagcanvas = document.getElementById("myCanvas");
+var sprite_flagctx = sprite_flagcanvas.getContext("2d");
+var sprite_flagdata = sprite_flagctx.createImageData(22, 22);
+var sprite_flag = document.getElementById("idSpriteFlag");
+
+var sprite_digit0canvas = document.getElementById("myCanvas");
+var sprite_digit0ctx = sprite_digit0canvas.getContext("2d");
+var sprite_digit0data = sprite_digit0ctx.createImageData(23, 28);
+var sprite_digit0 = document.getElementById("idSpriteDigit0");
+
+var sprite_digit1canvas = document.getElementById("myCanvas");
+var sprite_digit1ctx = sprite_digit1canvas.getContext("2d");
+var sprite_digit1data = sprite_digit1ctx.createImageData(23, 28);
+var sprite_digit1 = document.getElementById("idSpriteDigit1");
+
+var sprite_digit2canvas = document.getElementById("myCanvas");
+var sprite_digit2ctx = sprite_digit2canvas.getContext("2d");
+var sprite_digit2data = sprite_digit2ctx.createImageData(23, 28);
+var sprite_digit2 = document.getElementById("idSpriteDigit2");
+
+var sprite_digit3canvas = document.getElementById("myCanvas");
+var sprite_digit3ctx = sprite_digit3canvas.getContext("2d");
+var sprite_digit3data = sprite_digit3ctx.createImageData(23, 28);
+var sprite_digit3 = document.getElementById("idSpriteDigit3");
+
+var sprite_digit4canvas = document.getElementById("myCanvas");
+var sprite_digit4ctx = sprite_digit4canvas.getContext("2d");
+var sprite_digit4data = sprite_digit4ctx.createImageData(23, 28);
+var sprite_digit4 = document.getElementById("idSpriteDigit4");
+
+var sprite_digit5canvas = document.getElementById("myCanvas");
+var sprite_digit5ctx = sprite_digit5canvas.getContext("2d");
+var sprite_digit5data = sprite_digit5ctx.createImageData(23, 28);
+var sprite_digit5 = document.getElementById("idSpriteDigit5");
+
+var sprite_digit6canvas = document.getElementById("myCanvas");
+var sprite_digit6ctx = sprite_digit6canvas.getContext("2d");
+var sprite_digit6data = sprite_digit6ctx.createImageData(23, 28);
+var sprite_digit6 = document.getElementById("idSpriteDigit6");
+
+var sprite_digit7canvas = document.getElementById("myCanvas");
+var sprite_digit7ctx = sprite_digit7canvas.getContext("2d");
+var sprite_digit7data = sprite_digit7ctx.createImageData(23, 28);
+var sprite_digit7 = document.getElementById("idSpriteDigit7");
+
+var sprite_player1deadcanvas = document.getElementById("myCanvas");
+var sprite_player1deadctx = sprite_player1deadcanvas.getContext("2d");
+var sprite_player1deaddata = sprite_player1deadctx.createImageData(277, 32);
+var sprite_player1dead = document.getElementById("idSpritePlayer1dead");
+
+var sprite_player2deadcanvas = document.getElementById("myCanvas");
+var sprite_player2deadctx = sprite_player2deadcanvas.getContext("2d");
+var sprite_player2deaddata = sprite_player2deadctx.createImageData(277, 32);
+var sprite_player2dead = document.getElementById("idSpritePlayer2dead");
+
+var sprite_player3deadcanvas = document.getElementById("myCanvas");
+var sprite_player3deadctx = sprite_player3deadcanvas.getContext("2d");
+var sprite_player3deaddata = sprite_player3deadctx.createImageData(277, 32);
+var sprite_player3dead = document.getElementById("idSpritePlayer3dead");
+
+var sprite_player4deadcanvas = document.getElementById("myCanvas");
+var sprite_player4deadctx = sprite_player4deadcanvas.getContext("2d");
+var sprite_player4deaddata = sprite_player4deadctx.createImageData(277, 32);
+var sprite_player4dead = document.getElementById("idSpritePlayer4dead");
+
+var sprite_player1safecanvas = document.getElementById("myCanvas");
+var sprite_player1safectx = sprite_player1safecanvas.getContext("2d");
+var sprite_player1safedata = sprite_player1safectx.createImageData(277, 32);
+var sprite_player1safe = document.getElementById("idSpritePlayer1safe");
+
+var sprite_player2safecanvas = document.getElementById("myCanvas");
+var sprite_player2safectx = sprite_player2safecanvas.getContext("2d");
+var sprite_player2safedata = sprite_player2safectx.createImageData(277, 32);
+var sprite_player2safe = document.getElementById("idSpritePlayer2safe");
+
+var sprite_player3safecanvas = document.getElementById("myCanvas");
+var sprite_player3safectx = sprite_player3safecanvas.getContext("2d");
+var sprite_player3safedata = sprite_player3safectx.createImageData(277, 32);
+var sprite_player3safe = document.getElementById("idSpritePlayer3safe");
+
+var sprite_player4safecanvas = document.getElementById("myCanvas");
+var sprite_player4safectx = sprite_player4safecanvas.getContext("2d");
+var sprite_player4safedata = sprite_player4safectx.createImageData(277, 32);
+var sprite_player4safe = document.getElementById("idSpritePlayer4safe");
+
+// Array for the minefield.
+var mineField = [];
+
+// In-game gfx to be stored here when the screen flashes in white or some other similar gfx effect is applied.
+var storedGfx = [];
+
+var explosionEffect = false;
+
+var maxNumberOfMines = 427; // This option can be set in the options menu in the final version.
+// Recommended max number of mines is 777, that does make the game difficult enough already.
+
+var soundFXOn = true;
+
+var delayBeforeGameOverScreen = 0;
+
+var players = 1; // How many players (1 to 4). Default setting is 1.
+
+var detectMinesInAllDirections = true; // Determines whether the mine detector detects diagonal squares too - all 8 directions. Default setting is true.
+
+var gameState = gameState_title;
+
+var imgData, p1GoingUp, p1GoingDown, p1GoingLeft, p1GoingRight, p2GoingUp,
+p2GoingDown, p2GoingLeft, p2GoingRight, p3GoingUp, p3GoingDown, p3GoingLeft,
+p3GoingRight, p4GoingUp, p4GoingDown, p4GoingLeft, p4GoingRight, spacePressed,
+mustReleaseP1UpKey, mustReleaseP1DownKey, mustReleaseP1LeftKey,
+mustReleaseP1RightKey, mustReleaseP2UpKey, mustReleaseP2DownKey,
+mustReleaseP2LeftKey, mustReleaseP2RightKey, mustReleaseP3UpKey,
+mustReleaseP3DownKey, mustReleaseP3LeftKey, mustReleaseP3RightKey,
+mustReleaseP4UpKey, mustReleaseP4DownKey, mustReleaseP4LeftKey,
+mustReleaseP4RightKey, mustReleaseEnterKey, keyBackspaceTyped, keyEnterTyped,
+keyMTyped, keyNTyped, key0Typed, key1Typed, key2Typed, key3Typed, key4Typed,
+key5Typed, key6Typed, key7Typed, key8Typed, key9Typed, player1TileX,
+player1TileY, player2TileX, player2TileY, player3TileX, player3TileY,
+player4TileX, player4TileY, player1Active, player2Active, player3Active,
+player4Active, player1Won, player2Won, player3Won, player4Won, optionsPage,
+currentOption, numberOfOptions, optionsArrowX, optionsArrowY, minesNumberInput,
+minesNumberInputLength;
+
+let Application = PIXI.Application,
+	Container = PIXI.Container,
+	loader = PIXI.loader,
+	resources = PIXI.loader.resources,
+	TextureCache = PIXI.utils.TextureCache,
+	Sprite = PIXI.Sprite;
+let app = new Application(
+{
+	width: screenWidth, 
+	height: screenHeight,
+	antialiasing: false, 
+	transparent: false, 
+	resolution: 1,
+	forceCanvas: true
+}
+);
+loader
+	.load(setup);
+
+function setup() 
+{
+	// Capture the keyboard arrow keys.
+	let left = keyboard(37),
+	up = keyboard(38),
+	right = keyboard(39),
+	down = keyboard(40),
+	enter = keyboard(13),
+	spacebar = keyboard(32),
+	p2Up = keyboard(87),
+	p2Down = keyboard(83),
+	p2Left = keyboard(65),
+	p2Right = keyboard(68),
+	p3Up = keyboard(84),
+	p3Down = keyboard(71),
+	p3Left = keyboard(70),
+	p3Right = keyboard(72),
+	p4Up = keyboard(73),
+	p4Down = keyboard(75),
+	p4Left = keyboard(74),
+	p4Right = keyboard(76),
+	keyBackspace = keyboard(8),
+	key0 = keyboard(48),
+	key1 = keyboard(49),
+	key2 = keyboard(50),
+	key3 = keyboard(51),
+	key4 = keyboard(52),
+	key5 = keyboard(53),
+	key6 = keyboard(54),
+	key7 = keyboard(55),
+	key8 = keyboard(56),
+	key9 = keyboard(57),
+	keyM = keyboard(77),
+	keyN = keyboard(78);
+
+	// Key 0
+	key0.press = () =>
+	{
+		key0Typed = false;
+	};
+	key0.release = () =>
+	{
+		key0Typed = true;
+	};
+	// Key 1
+	key1.press = () =>
+	{
+		key1Typed = false;
+	};
+	key1.release = () =>
+	{
+		key1Typed = true;
+	};
+	// Key 2
+	key2.press = () =>
+	{
+		key2Typed = false;
+	};
+	key2.release = () =>
+	{
+		key2Typed = true;
+	};
+	// Key 3
+	key3.press = () =>
+	{
+		key3Typed = false;
+	};
+	key3.release = () =>
+	{
+		key3Typed = true;
+	};
+	// Key 4
+	key4.press = () =>
+	{
+		key4Typed = false;
+	};
+	key4.release = () =>
+	{
+		key4Typed = true;
+	};
+	// Key 5
+	key5.press = () =>
+	{
+		key5Typed = false;
+	};
+	key5.release = () =>
+	{
+		key5Typed = true;
+	};
+	// Key 6
+	key6.press = () =>
+	{
+		key6Typed = false;
+	};
+	key6.release = () =>
+	{
+		key6Typed = true;
+	};
+	// Key 7
+	key7.press = () =>
+	{
+		key7Typed = false;
+	};
+	key7.release = () =>
+	{
+		key7Typed = true;
+	};
+	// Key 8
+	key8.press = () =>
+	{
+		key8Typed = false;
+	};
+	key8.release = () =>
+	{
+		key8Typed = true;
+	};
+	// Key 9
+	key9.press = () =>
+	{
+		key9Typed = false;
+	};
+	key9.release = () =>
+	{
+		key9Typed = true;
+	};
+	// Key Backspace
+	keyBackspace.press = () =>
+	{
+		keyBackspaceTyped = false;
+	};
+	keyBackspace.release = () =>
+	{
+		keyBackspaceTyped = true;
+	};
+	// Key M
+	keyM.press = () =>
+	{
+		keyMTyped = false;
+	};
+	keyM.release = () =>
+	{
+		keyMTyped = true;
+	};
+	// Key N
+	keyN.press = () =>
+	{
+		keyNTyped = false;
+	};
+	keyN.release = () =>
+	{
+		keyNTyped = true;
+	};
+
+	// Enter
+	enter.press = () =>
+	{
+		keyEnterTyped = false;
+	};
+	enter.release = () =>
+	{
+		keyEnterTyped = true;
+	};
+
+	// Spacebar
+	spacebar.press = () =>
+	{
+		spacePressed = true;
+	};
+	spacebar.release = () =>
+	{
+		spacePressed = false;
+	};
+
+	// Player 2 Up
+	p2Up.press = () =>
+	{
+		p2GoingUp = true;
+	};
+	p2Up.release = () =>
+	{
+		p2GoingUp = false;
+	};
+	// Player 2 Down
+	p2Down.press = () =>
+	{
+		p2GoingDown = true;
+	};
+	p2Down.release = () =>
+	{
+		p2GoingDown = false;
+	};
+	// Player 2 Right
+	p2Right.press = () =>
+	{
+		p2GoingRight = true;
+	};
+	p2Right.release = () =>
+	{
+		p2GoingRight = false;
+	};
+	// Player 2 Left
+	p2Left.press = () =>
+	{
+		p2GoingLeft = true;
+	};
+	p2Left.release = () =>
+	{
+		p2GoingLeft = false;
+	};
+
+	// Player 3 Up
+	p3Up.press = () =>
+	{
+		p3GoingUp = true;
+	};
+	p3Up.release = () =>
+	{
+		p3GoingUp = false;
+	};
+	// Player 3 Down
+	p3Down.press = () =>
+	{
+		p3GoingDown = true;
+	};
+	p3Down.release = () =>
+	{
+		p3GoingDown = false;
+	};
+	// Player 3 Right
+	p3Right.press = () =>
+	{
+		p3GoingRight = true;
+	};
+	p3Right.release = () =>
+	{
+		p3GoingRight = false;
+	};
+	// Player 3 Left
+	p3Left.press = () =>
+	{
+		p3GoingLeft = true;
+	};
+	p3Left.release = () =>
+	{
+		p3GoingLeft = false;
+	};
+
+	// Player 4 Up
+	p4Up.press = () =>
+	{
+		p4GoingUp = true;
+	};
+	p4Up.release = () =>
+	{
+		p4GoingUp = false;
+	};
+	// Player 4 Down
+	p4Down.press = () =>
+	{
+		p4GoingDown = true;
+	};
+	p4Down.release = () =>
+	{
+		p4GoingDown = false;
+	};
+	// Player 4 Right
+	p4Right.press = () =>
+	{
+		p4GoingRight = true;
+	};
+	p4Right.release = () =>
+	{
+		p4GoingRight = false;
+	};
+	// Player 4 Left
+	p4Left.press = () =>
+	{
+		p4GoingLeft = true;
+	};
+	p4Left.release = () =>
+	{
+		p4GoingLeft = false;
+	};
+
+	// Up Arrow Key
+	up.press = () =>
+	{
+		p1GoingUp = true;
+	};
+	up.release = () =>
+	{
+		p1GoingUp = false;
+	};
+	// Down Arrow Key
+	down.press = () =>
+	{
+		p1GoingDown = true;
+	};
+	down.release = () =>
+	{
+		p1GoingDown = false;
+	};
+	// Left Arrow Key
+	left.press = () =>
+	{
+		p1GoingLeft = true;
+	};
+	left.release = () =>
+	{
+		p1GoingLeft = false;
+	};
+	// Right Arrow Key
+	right.press = () =>
+	{
+		p1GoingRight = true;
+	};
+	right.release = () =>
+	{
+		p1GoingRight = false;
+	};
+	state = play;
+	//Start the game loop
+	app.ticker.add(delta => gameLoop(delta));
+}
+
+function updateStatus()
+{
+	requestAnimationFrame(updateStatus);
+}
+
+function gameLoop(delta)
+{
+	//Update the current game state
+	state(delta);
+}
+
+function clickMinefield(event) {
+	if(gameState == gameState_ingame) {
+		if(event.offsetX >= 0 && event.offsetX <= (screenWidth - 19) && event.offsetY >= 0 && event.offsetY <= (screenHeight - 52)) {
+			//console.log("clicked x,y: " + event.offsetX + "," + event.offsetY);
+			var tileX = Math.floor(event.offsetX / 22);
+			var tileY = Math.floor(event.offsetY / 22);
+			//console.log("tile x,y: " + tileX + "," + tileY);
+			var pos = (tileY * 86) + tileX;
+			switch(mineField[pos]) {
+				case 0:
+					mineField[pos] = 9;
+					break;
+				case 2:
+					mineField[pos] = 10;
+					break;
+				case 9:
+					mineField[pos] = 0;
+					break;
+				case 10:
+					mineField[pos] = 2;
+					break;
+			}
+			refreshMineFieldGfx();
+			if(player4Active)drawTile(8, player4TileX, player4TileY);
+			if(player3Active)drawTile(7, player3TileX, player3TileY);
+			if(player2Active)drawTile(6, player2TileX, player2TileY);
+			if(player1Active) drawTile(5, player1TileX, player1TileY);
+		}
+	}
+}
+
+function refreshMineFieldGfx() {
+	var yTilePos = 0;
+	while(yTilePos < 39) {
+		for(var xTilePos = 0; xTilePos < 86; xTilePos++) {
+			var pos = (yTilePos * 86) + xTilePos;
+			drawTile(mineField[pos], xTilePos, yTilePos);
+		}
+		yTilePos++;
+	}
+}
+
+function show_ending_screen() {
+	gameState = gameState_gameover;
+	ctx.drawImage(endingimage, 0, 0);
+
+	ctx.font = "bold 30px Arial";
+	ctx.textAlign = "center";
+	ctx.fillText("Game Over", canvas.width / 2, 80);
+	ctx.font = "30px Arial";
+	ctx.fillText("The Outcome:", canvas.width / 2, 180);
+	if(player1Won) {
+		ctx.fillText("Player 1 won!", canvas.width / 2, 280);
+	}
+	else {
+		ctx.fillText("Player 1 lost!", canvas.width / 2, 280);
+	}
+	if(players >= 2) {
+		if(player2Won) {
+			ctx.fillText("Player 2 won!", canvas.width / 2, 380);
+		}
+		else {
+			ctx.fillText("Player 2 lost!", canvas.width / 2, 380);
+		}
+	}
+	if(players >= 3) {
+		if(player3Won) {
+			ctx.fillText("Player 3 won!", canvas.width / 2, 480);
+		}
+		else {
+			ctx.fillText("Player 3 lost!", canvas.width / 2, 480);
+		}
+	}
+	if(players >= 4) {
+		if(player4Won) {
+			ctx.fillText("Player 4 won!", canvas.width / 2, 580);
+		}
+		else {
+			ctx.fillText("Player 4 lost!", canvas.width / 2, 580);
+		}
+	}
+
+	ctx.font = "bold 50px Arial";
+	ctx.fillText("PRESS SPACE TO CONTINUE", canvas.width / 2, 880);
+
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	ctx.putImageData(imgData, 0, 0);
+}
+
+async function initializeTitle()
+{
+	gameState = gameState_title;
+	optionsPage = 0;
+	snd_music_ingame.pause();
+	currentOption = 0;
+	numberOfOptions = 3;
+
+	ctx.drawImage(titleimage, 0, 0);
+
+	ctx.font = "50px Arial";
+	ctx.textAlign = "center";
+	ctx.fillText("START GAME", canvas.width / 2, 700);
+	ctx.fillText("OPTIONS", canvas.width / 2, 750);
+	ctx.fillText("INSTRUCTIONS", canvas.width / 2, 800);
+	ctx.fillText("(C) 2025 Joonas Lindberg", canvas.width / 2, 900);
+
+	optionsArrowX = 730;
+	optionsArrowY = 665;
+	ctx.drawImage(sprite_arrow, optionsArrowX, optionsArrowY);
+
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	ctx.putImageData(imgData, 0, 0);
+}
+
+async function initializeGame()
+{
+	gameState = gameState_ingame;
+
+	player1TileX = 0;
+	player1TileY = 0;
+	player2TileX = 0;
+	player2TileY = 1;
+	player3TileX = 0;
+	player3TileY = 2;
+	player4TileX = 0;
+	player4TileY = 3;
+
+	player1Active = true;
+	player2Active = false;
+	player3Active = false;
+	player4Active = false;
+	if(players >= 2) player2Active = true;
+	if(players >= 3) player3Active = true;
+	if(players >= 4) player4Active = true;
+	player1Won = false;
+	player2Won = false;
+	player3Won = false;
+	player4Won = false;
+	ctx.drawImage(ingameimage, 0, 0);
+
+	// Fill the minefield.
+	// Minefield dimensions: 86 * 39 = 3354 tiles
+
+	var currX = 0;
+	for(var pos = 0; pos < 3354; pos++) {
+		if(currX == 0 || currX == 85) {
+			mineField[pos] = 1;
+		}
+		else {
+			mineField[pos] = 0;
+		}
+		currX++;
+		if(currX >= 86) currX = 0;
+	}
+
+	var numberOfMines = 0;
+	while(numberOfMines < maxNumberOfMines) {
+		var empty = false;
+		while(!empty)
+		{
+			var randX = Math.floor(Math.random() * 84);
+			var randY = Math.floor(Math.random() * 39);
+			randX++;
+			var pos = (randY * 86) + randX;
+			if(mineField[pos] == 0) empty = true;
+		}
+		mineField[pos] = 2;
+		numberOfMines++;
+	}
+
+	// Put the graphics of all the tiles in place.
+	refreshMineFieldGfx();
+
+	ctx.font = "30px Arial";
+	ctx.textAlign = "start";
+	refreshMinesNearbyDisplay(0);
+	drawTile(5, player1TileX, player1TileY);
+	ctx.fillText("P1 mines nearby", 77, 902);
+
+	if(player2Active) {
+		refreshMinesNearbyDisplay(1);
+		drawTile(6, player2TileX, player2TileY);
+		ctx.fillText("P2 mines nearby", 539, 902);
+	}
+	if(player3Active) {
+		refreshMinesNearbyDisplay(2);
+		drawTile(7, player3TileX, player3TileY);
+		ctx.fillText("P3 mines nearby", 1001, 902);
+	}
+	if(player4Active) {
+		refreshMinesNearbyDisplay(3);
+		drawTile(8, player4TileX, player4TileY);
+		ctx.fillText("P4 mines nearby", 1463, 902);
+	}
+
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	ctx.putImageData(imgData, 0, 0);
+
+	snd_music_ingame.load();
+	snd_music_ingame.loop = true;
+	snd_music_ingame.play();
+}
+
+window.onload = function() {
+	imgData = ctx.createImageData(screenWidth, screenHeight);
+	initializeTitle();
+};
+
+function drawTile(tileType, tileXPos, tileYPos) {
+	switch(tileType) {
+		case 0:
+			ctx.drawImage(sprite_inactivetile, (tileXPos * 22), (tileYPos * 22));
+			break;
+		case 1:
+			ctx.drawImage(sprite_safetile, (tileXPos * 22), (tileYPos * 22));
+			break;
+		case 2:
+			ctx.drawImage(sprite_inactivetile, (tileXPos * 22), (tileYPos * 22));
+			break;
+		case 3:
+			ctx.drawImage(sprite_mine, (tileXPos * 22), (tileYPos * 22));
+			break;
+		case 5:
+			ctx.drawImage(sprite_player1, (tileXPos * 22), (tileYPos * 22));
+			break;
+		case 6:
+			ctx.drawImage(sprite_player2, (tileXPos * 22), (tileYPos * 22));
+			break;
+		case 7:
+			ctx.drawImage(sprite_player3, (tileXPos * 22), (tileYPos * 22));
+			break;
+		case 8:
+			ctx.drawImage(sprite_player4, (tileXPos * 22), (tileYPos * 22));
+			break;
+		case 9:
+			ctx.drawImage(sprite_flag, (tileXPos * 22), (tileYPos * 22));
+			break;
+		case 10:
+			ctx.drawImage(sprite_flag, (tileXPos * 22), (tileYPos * 22));
+			break;
+	}
+}
+
+function refreshMinesNearbyDisplay(whichPlayer) {
+	const mineDigitXCoordinates = [311, 773, 1235, 1697];
+	var coordX, coordY;
+	switch(whichPlayer) {
+		case 0:
+			coordX = player1TileX;
+			coordY = player1TileY;
+			break;
+		case 1:
+			coordX = player2TileX;
+			coordY = player2TileY;
+			break;
+		case 2:
+			coordX = player3TileX;
+			coordY = player3TileY;
+			break;
+		case 3:
+			coordX = player4TileX;
+			coordY = player4TileY;
+			break;
+	}
+	const checkPosN = ((coordY - 1) * 86) + coordX;
+	const checkPosE = (coordY * 86) + coordX + 1;
+	const checkPosS = ((coordY + 1) * 86) + coordX;
+	const checkPosW = (coordY * 86) + coordX - 1;
+	const checkPosNW = ((coordY - 1) * 86) + coordX - 1;
+	const checkPosNE = ((coordY - 1) * 86) + coordX + 1;
+	const checkPosSW = ((coordY + 1) * 86) + coordX - 1;
+	const checkPosSE = ((coordY + 1) * 86) + coordX + 1;
+
+	var minesNearby = 0;
+	if(detectMinesInAllDirections) {
+		if(coordX >= 1 && coordY >= 1 && (mineField[checkPosNW] == 2 || mineField[checkPosNW] == 10)) {
+			minesNearby++;
+		}
+		if(coordX < 85 && coordY >= 1 && (mineField[checkPosNE] == 2 || mineField[checkPosNE] == 10)) {
+			minesNearby++;
+		}
+		if(coordX < 85 && coordY < 38 && (mineField[checkPosSE] == 2 || mineField[checkPosSE] == 10)) {
+			minesNearby++;
+		}
+		if(coordX >= 1 && coordY < 38 && (mineField[checkPosSW] == 2 || mineField[checkPosSW] == 10)) {
+			minesNearby++;
+		}
+	}
+	if(coordY >= 1 && (mineField[checkPosN] == 2 || mineField[checkPosN] == 10)) {
+		minesNearby++;
+	}
+	if(coordX < 85 && (mineField[checkPosE] == 2 || mineField[checkPosE] == 10)) {
+		minesNearby++;
+	}
+	if(coordY < 38 && (mineField[checkPosS] == 2 || mineField[checkPosS] == 10)) {
+		minesNearby++;
+	}
+	if(coordX >= 1 && (mineField[checkPosW] == 2 || mineField[checkPosW] == 10)) {
+		minesNearby++;
+	}
+
+	switch(minesNearby) {
+		case 0:
+			ctx.drawImage(sprite_digit0, mineDigitXCoordinates[whichPlayer], 879);
+			break;
+		case 1:
+			ctx.drawImage(sprite_digit1, mineDigitXCoordinates[whichPlayer], 879);
+			break;
+		case 2:
+			ctx.drawImage(sprite_digit2, mineDigitXCoordinates[whichPlayer], 879);
+			break;
+		case 3:
+			ctx.drawImage(sprite_digit3, mineDigitXCoordinates[whichPlayer], 879);
+			break;
+		case 4:
+			ctx.drawImage(sprite_digit4, mineDigitXCoordinates[whichPlayer], 879);
+			break;
+		case 5:
+			ctx.drawImage(sprite_digit5, mineDigitXCoordinates[whichPlayer], 879);
+			break;
+		case 6:
+			ctx.drawImage(sprite_digit6, mineDigitXCoordinates[whichPlayer], 879);
+			break;
+		case 7:
+			ctx.drawImage(sprite_digit7, mineDigitXCoordinates[whichPlayer], 879);
+			break;
+	}
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	ctx.putImageData(imgData, 0, 0);
+	if(minesNearby > 0) {
+		if(soundFXOn) {
+			snd_minenearby.load();
+			snd_minenearby.play();
+		}
+	}
+}
+
+function movePlayer(whichPlayer, direction) {
+	var coordX, coordY;
+	switch(whichPlayer) {
+		case 0:
+			coordX = player1TileX;
+			coordY = player1TileY;
+			break;
+		case 1:
+			coordX = player2TileX;
+			coordY = player2TileY;
+			break;
+		case 2:
+			coordX = player3TileX;
+			coordY = player3TileY;
+			break;
+		case 3:
+			coordX = player4TileX;
+			coordY = player4TileY;
+			break;
+	}
+	var pos = (coordY * 86) + coordX;
+	mineField[pos] = 1;
+	drawTile(mineField[pos], coordX, coordY);
+	switch(direction) {
+		case 0:
+			if(coordY > 0) {
+				coordY--;
+				var pos = (coordY * 86) + coordX;
+				if(mineField[pos] >= 9) {
+					coordY++;
+				}
+				else {
+					switch(whichPlayer) {
+						case 0:
+							player1TileY--;
+							break;
+						case 1:
+							player2TileY--;
+							break;
+						case 2:
+							player3TileY--;
+							break;
+						case 3:
+							player4TileY--;
+							break;
+					}
+				}
+			}
+			break;
+		case 1:
+			if(coordY < 38) {
+				coordY++;
+				var pos = (coordY * 86) + coordX;
+				if(mineField[pos] >= 9) {
+					coordY--;
+				}
+				else {
+					switch(whichPlayer) {
+						case 0:
+							player1TileY++;
+							break;
+						case 1:
+							player2TileY++;
+							break;
+						case 2:
+							player3TileY++;
+							break;
+						case 3:
+							player4TileY++;
+							break;
+					}
+				}
+			}
+			break;
+		case 2:
+			if(coordX < 85) {
+				coordX++;
+				var pos = (coordY * 86) + coordX;
+				if(mineField[pos] >= 9) {
+					coordX--;
+				}
+				else {
+					switch(whichPlayer) {
+						case 0:
+							player1TileX++;
+							break;
+						case 1:
+							player2TileX++;
+							break;
+						case 2:
+							player3TileX++;
+							break;
+						case 3:
+							player4TileX++;
+							break;
+					}
+				}
+			}
+			break;
+		case 3:
+			if(coordX > 0) {
+				coordX--;
+				var pos = (coordY * 86) + coordX;
+				if(mineField[pos] >= 9) {
+					coordX++;
+				}
+				else {
+				switch(whichPlayer) {
+					case 0:
+						player1TileX--;
+						break;
+					case 1:
+						player2TileX--;
+						break;
+					case 2:
+						player3TileX--;
+						break;
+					case 3:
+						player4TileX--;
+						break;
+					}
+				}
+			}
+			break;
+	}
+	if(player4Active) drawTile(8, player4TileX, player4TileY);
+	if(player3Active) drawTile(7, player3TileX, player3TileY);
+	if(player2Active) drawTile(6, player2TileX, player2TileY);
+	if(player1Active) drawTile(5, player1TileX, player1TileY);
+
+	refreshMinesNearbyDisplay(whichPlayer);
+
+	var pos = (coordY * 86) + coordX;
+	if(mineField[pos] != 0 && mineField[pos] != 1) {
+		switch(whichPlayer) {
+			case 0:
+				player1Active = false;
+				ctx.drawImage(sprite_player1dead, 33, 877);
+				ctx.drawImage(ingameimage, 311, 879, 23, 28, 311, 879, 23, 28);
+				break;
+			case 1:
+				player2Active = false;
+				ctx.drawImage(sprite_player2dead, 495, 877);
+				ctx.drawImage(ingameimage, 773, 879, 23, 28, 773, 879, 23, 28);
+				break;
+			case 2:
+				player3Active = false;
+				ctx.drawImage(sprite_player3dead, 957, 877);
+				ctx.drawImage(ingameimage, 1235, 879, 23, 28, 1235, 879, 23, 28);
+				break;
+			case 3:
+				player4Active = false;
+				ctx.drawImage(sprite_player4dead, 1419, 877);
+				ctx.drawImage(ingameimage, 1697, 879, 23, 28, 1697, 879, 23, 28);
+				break;
+		}
+		mineField[pos] = 1;
+		if(player1Active) refreshMinesNearbyDisplay(0);
+		if(player2Active) refreshMinesNearbyDisplay(1);
+		if(player3Active) refreshMinesNearbyDisplay(2);
+		if(player4Active) refreshMinesNearbyDisplay(3);
+		drawTile(1, coordX, coordY);
+
+		switch(whichPlayer) {
+			case 0:
+				if(soundFXOn) snd_xplode1.play();
+				break;
+			case 1:
+				if(soundFXOn) snd_xplode2.play();
+				break;
+			case 2:
+				if(soundFXOn) snd_xplode3.play();
+				break;
+			case 3:
+				if(soundFXOn) snd_xplode4.play();
+				break;
+		}
+		explosionEffect = true;
+	}
+
+	if(player1Active && player1TileX >= 85) {
+		player1Won = true;
+		if(soundFXOn) snd_player1safe.play();
+		player1Active = false;
+		ctx.drawImage(sprite_player1safe, 33, 877);
+		ctx.drawImage(ingameimage, 311, 879, 23, 28, 311, 879, 23, 28);
+		drawTile(1, player1TileX, player1TileY);
+	}
+	if(player2Active && player2TileX >= 85) {
+		player2Won = true;
+		if(soundFXOn) snd_player2safe.play();
+		player2Active = false;
+		ctx.drawImage(sprite_player2safe, 495, 877);
+		ctx.drawImage(ingameimage, 773, 879, 23, 28, 773, 879, 23, 28);
+		drawTile(1, player2TileX, player2TileY);
+	}
+	if(player3Active && player3TileX >= 85) {
+		player3Won = true;
+		if(soundFXOn) snd_player3safe.play();
+		player3Active = false;
+		ctx.drawImage(sprite_player3safe, 957, 877);
+		ctx.drawImage(ingameimage, 1235, 879, 23, 28, 1235, 879, 23, 28);
+		drawTile(1, player3TileX, player3TileY);
+	}
+	if(player4Active && player4TileX >= 85) {
+		player4Won = true;
+		if(soundFXOn) snd_player4safe.play();
+		player4Active = false;
+		ctx.drawImage(sprite_player4safe, 1419, 877);
+		ctx.drawImage(ingameimage, 1697, 879, 23, 28, 1697, 879, 23, 28);
+		drawTile(1, player4TileX, player4TileY);
+	}
+
+	if(!player1Active && !player2Active && !player3Active && !player4Active) {
+		delayBeforeGameOverScreen = 400;
+		for(var pos = 0; pos < 3354; pos++) {
+			if(mineField[pos] == 2) mineField[pos] = 3;
+		}
+		refreshMineFieldGfx();
+	}
+
+	if(explosionEffect) {
+		myCanvaspiccy = myCanvasctx.getImageData(0, 0, myCanvascanvas.width, myCanvascanvas.height);
+		for(var pos = 0; pos < 6944760; pos += 4) {
+			storedGfx[pos + 0] = myCanvaspiccy.data[pos + 0];
+			storedGfx[pos + 1] = myCanvaspiccy.data[pos + 1];
+			storedGfx[pos + 2] = myCanvaspiccy.data[pos + 2];
+			storedGfx[pos + 3] = myCanvaspiccy.data[pos + 3];
+			myCanvaspiccy.data[pos + 0] = 255;
+			myCanvaspiccy.data[pos + 1] = 255;
+			myCanvaspiccy.data[pos + 2] = 255;
+			myCanvaspiccy.data[pos + 3] = 255;
+		}
+		myCanvasctx.putImageData(myCanvaspiccy, 0, 0);
+	}
+
+	myCanvaspiccy = myCanvasctx.getImageData(0, 0, myCanvascanvas.width, myCanvascanvas.height);
+	myCanvasctx.putImageData(myCanvaspiccy, 0, 0);
+}
+
+function secondOptionsPage() {
+	ctx.drawImage(titleimage, 0, 0, titleimage.width, titleimage.height - 45, 0, 0, titleimage.width, titleimage.height - 45);
+	ctx.fillText("NUMBER OF PLAYERS: " + players, canvas.width / 2, 650);
+	if(detectMinesInAllDirections) {
+		ctx.fillText("MINE DETECTOR DETECTS MINES IN ALL 8 DIRECTIONS", canvas.width / 2, 700);
+	}
+	else {
+		ctx.fillText("MINE DETECTOR DETECTS MINES N, S, E, W (IN 4 DIRECTIONS)", canvas.width / 2, 700);
+	}
+
+	if(gameState == gameState_inputNumber) {
+		ctx.fillText("NUMBER OF MINES: " + minesNumberInput + "_", canvas.width / 2, 750);
+	}
+	else {
+		ctx.fillText("NUMBER OF MINES: " + minesNumberInput, canvas.width / 2, 750);
+	}
+	ctx.fillText("OK", canvas.width / 2, 800);
+	ctx.drawImage(sprite_arrow, optionsArrowX, optionsArrowY);
+}
+
+function typedNumber(numberAsString) {
+	if(minesNumberInputLength < 4) {
+		minesNumberInputLength++;
+		minesNumberInput = minesNumberInput + numberAsString;
+		secondOptionsPage();
+	}
+}
+
+function play(delta)
+{
+
+	if(gameState == gameState_instructions) {
+		if(keyEnterTyped) keyEnterTyped = false;
+		if(spacePressed) {
+			initializeTitle();
+		}
+	}
+
+	if(gameState == gameState_inputNumber) {
+		if(keyEnterTyped) {
+			keyEnterTyped = false;
+			gameState = gameState_title;
+			if(minesNumberInputLength > 0) {
+				maxNumberOfMines = parseInt(minesNumberInput);
+				if(maxNumberOfMines < 1) maxNumberOfMines = 1;
+				if(maxNumberOfMines > 3276) maxNumberOfMines = 3276;
+				minesNumberInput = maxNumberOfMines;
+				secondOptionsPage();
+			}
+		}
+		if(keyBackspaceTyped) {
+			keyBackspaceTyped = false;
+			if(minesNumberInputLength > 0) {
+				minesNumberInputLength--;
+				minesNumberInput = minesNumberInput.substring(0, minesNumberInputLength);
+				secondOptionsPage();
+			}
+		}
+		if(key0Typed) {
+			key0Typed = false;
+			typedNumber("0");
+		}
+		if(key1Typed) {
+			key1Typed = false;
+			typedNumber("1");
+		}
+		if(key2Typed) {
+			key2Typed = false;
+			typedNumber("2");
+		}
+		if(key3Typed) {
+			key3Typed = false;
+			typedNumber("3");
+		}
+		if(key4Typed) {
+			key4Typed = false;
+			typedNumber("4");
+		}
+		if(key5Typed) {
+			key5Typed = false;
+			typedNumber("5");
+		}
+		if(key6Typed) {
+			key6Typed = false;
+			typedNumber("6");
+		}
+		if(key7Typed) {
+			key7Typed = false;
+			typedNumber("7");
+		}
+		if(key8Typed) {
+			key8Typed = false;
+			typedNumber("8");
+		}
+		if(key9Typed) {
+			key9Typed = false;
+			typedNumber("9");
+		}
+	}
+
+	if(gameState == gameState_gameover) {
+		if(spacePressed) {
+			initializeTitle();
+		}
+	}
+
+	if(gameState == gameState_title) {
+
+		if(p1GoingUp && !mustReleaseP1UpKey) {
+			mustReleaseP1UpKey = true;
+			if(currentOption > 0) {
+				currentOption--;
+				/*
+				To draw a part of an image to the canvas:
+				ctx.drawImage(img, sx, sy, swidth, sheight, x, y, width, height);
+				*/
+				ctx.drawImage(titleimage, optionsArrowX, optionsArrowY, sprite_arrow.width, sprite_arrow.height, optionsArrowX, optionsArrowY, sprite_arrow.width, sprite_arrow.height);
+				optionsArrowY -= 50;
+				ctx.drawImage(sprite_arrow, optionsArrowX, optionsArrowY);
+			}
+		}
+
+		if(p1GoingDown && !mustReleaseP1DownKey) {
+			mustReleaseP1DownKey = true;
+			if(currentOption < (numberOfOptions - 1)) {
+				currentOption++;
+				ctx.drawImage(titleimage, optionsArrowX, optionsArrowY, sprite_arrow.width, sprite_arrow.height, optionsArrowX, optionsArrowY, sprite_arrow.width, sprite_arrow.height);
+				optionsArrowY += 50;
+				ctx.drawImage(sprite_arrow, optionsArrowX, optionsArrowY);
+			}
+		}
+
+		if(keyEnterTyped) {
+			keyEnterTyped = false;
+			switch(optionsPage) {
+				case 0:
+					switch(currentOption) {
+						case 0:
+							initializeGame();
+							break;
+						case 1:
+							optionsPage = 1;
+							currentOption = 0;
+							numberOfOptions = 4;
+							optionsArrowX = 150;
+							optionsArrowY = 615;
+							minesNumberInput = maxNumberOfMines;
+							secondOptionsPage();
+							break;
+						case 2:
+							gameState = gameState_instructions;
+							ctx.drawImage(instructionsimage, 0, 0);
+							break;
+					}
+					break;
+				case 1:
+					switch(currentOption) {
+						case 0:
+							players++;
+							if(players > 4) players = 1;
+							secondOptionsPage();
+							break;
+						case 1:
+							if(detectMinesInAllDirections) {
+								detectMinesInAllDirections = false;
+							}
+							else {
+								detectMinesInAllDirections = true;
+							}
+							secondOptionsPage();
+							break;
+						case 2:
+							gameState = gameState_inputNumber;
+							minesNumberInput = "";
+							minesNumberInputLength = 0;
+							secondOptionsPage();
+							break;
+						case 3:
+							initializeTitle();
+							break;
+					}
+					break;
+			}
+		}
+
+		if(!p1GoingUp) {
+			mustReleaseP1UpKey = false;
+		}
+		if(!p1GoingDown) {
+			mustReleaseP1DownKey = false;
+		}
+	}
+
+	if(gameState == gameState_ingame) {
+
+	if(keyMTyped) {
+		keyMTyped = false;
+		if(snd_music_ingame.paused) {
+			snd_music_ingame.play();
+		}
+		else {
+			snd_music_ingame.pause();
+		}
+	}
+	if(keyNTyped) {
+		keyNTyped = false;
+		if(soundFXOn) {
+			soundFXOn = false;
+		}
+		else {
+			soundFXOn = true;
+		}
+	}
+
+	if(delayBeforeGameOverScreen > 0) {
+		delayBeforeGameOverScreen--;
+		if(delayBeforeGameOverScreen == 0) {
+			show_ending_screen();
+		}
+	}
+
+	if(explosionEffect) {
+		var pixelsInOriginalColor = 0;
+			for(var pos = 0; pos < 6944760; pos += 4) {
+				var valR = myCanvaspiccy.data[pos + 0];
+				var valG = myCanvaspiccy.data[pos + 1];
+				var valB = myCanvaspiccy.data[pos + 2];
+				if(valR > storedGfx[pos + 0]) {
+					valR -= 5;
+					if(valR < storedGfx[pos + 0]) {
+						valR = storedGfx[pos + 0];
+					}
+				}
+				if(valR < storedGfx[pos + 0]) {
+					valR += 5;
+					if(valR > storedGfx[pos + 0]) {
+						valR = storedGfx[pos + 0];
+					}
+				}
+				if(valG > storedGfx[pos + 1]) {
+					valG -= 5;
+					if(valG < storedGfx[pos + 1]) {
+						valG = storedGfx[pos + 1];
+					}
+				}
+				if(valG < storedGfx[pos + 1]) {
+					valG += 5;
+					if(valG > storedGfx[pos + 1]) {
+						valG = storedGfx[pos + 1];
+					}
+				}
+				if(valB > storedGfx[pos + 2]) {
+					valB -= 5;
+					if(valB < storedGfx[pos + 2]) {
+						valB = storedGfx[pos + 2];
+					}
+				}
+				if(valB < storedGfx[pos + 2]) {
+					valB += 5;
+					if(valB > storedGfx[pos + 2]) {
+						valB = storedGfx[pos + 2];
+					}
+				}
+				if(valR == storedGfx[pos + 0]) pixelsInOriginalColor++;
+				if(valG == storedGfx[pos + 1]) pixelsInOriginalColor++;
+				if(valB == storedGfx[pos + 2]) pixelsInOriginalColor++;
+				myCanvaspiccy.data[pos + 0] = valR;
+				myCanvaspiccy.data[pos + 1] = valG;
+				myCanvaspiccy.data[pos + 2] = valB;
+			}
+			myCanvasctx.putImageData(myCanvaspiccy, 0, 0);
+			if(pixelsInOriginalColor >= 5208570) {
+				explosionEffect = false;
+			}
+	}
+
+	else {
+		if(player1Active) {
+			if(p1GoingUp && !mustReleaseP1UpKey) {
+				mustReleaseP1UpKey = true;
+				movePlayer(0, 0);
+			}
+			if(p1GoingDown && !mustReleaseP1DownKey) {
+				mustReleaseP1DownKey = true;
+				movePlayer(0, 1);
+			}
+			if(p1GoingRight && !mustReleaseP1RightKey) {
+				mustReleaseP1RightKey = true;
+				movePlayer(0, 2);
+			}
+			if(p1GoingLeft && !mustReleaseP1LeftKey) {
+				mustReleaseP1LeftKey = true;
+				movePlayer(0, 3);
+			}
+		}
+		if(player2Active) {
+			if(p2GoingUp && !mustReleaseP2UpKey) {
+				mustReleaseP2UpKey = true;
+				movePlayer(1, 0);
+			}
+			if(p2GoingDown && !mustReleaseP2DownKey) {
+				mustReleaseP2DownKey = true;
+				movePlayer(1, 1);
+			}
+			if(p2GoingRight && !mustReleaseP2RightKey) {
+				mustReleaseP2RightKey = true;
+				movePlayer(1, 2);
+			}
+			if(p2GoingLeft && !mustReleaseP2LeftKey) {
+				mustReleaseP2LeftKey = true;
+				movePlayer(1, 3);
+			}
+		}
+		if(player3Active) {
+			if(p3GoingUp && !mustReleaseP3UpKey) {
+				mustReleaseP3UpKey = true;
+				movePlayer(2, 0);
+			}
+			if(p3GoingDown && !mustReleaseP3DownKey) {
+				mustReleaseP3DownKey = true;
+				movePlayer(2, 1);
+			}
+			if(p3GoingRight && !mustReleaseP3RightKey) {
+				mustReleaseP3RightKey = true;
+				movePlayer(2, 2);
+			}
+			if(p3GoingLeft && !mustReleaseP3LeftKey) {
+				mustReleaseP3LeftKey = true;
+				movePlayer(2, 3);
+			}
+		}
+		if(player4Active) {
+			if(p4GoingUp && !mustReleaseP4UpKey) {
+				mustReleaseP4UpKey = true;
+				movePlayer(3, 0);
+			}
+			if(p4GoingDown && !mustReleaseP4DownKey) {
+				mustReleaseP4DownKey = true;
+				movePlayer(3, 1);
+			}
+			if(p4GoingRight && !mustReleaseP4RightKey) {
+				mustReleaseP4RightKey = true;
+				movePlayer(3, 2);
+			}
+			if(p4GoingLeft && !mustReleaseP4LeftKey) {
+				mustReleaseP4LeftKey = true;
+				movePlayer(3, 3);
+			}
+		}
+
+		if(!p1GoingUp) {
+			mustReleaseP1UpKey = false;
+		}
+		if(!p1GoingDown) {
+			mustReleaseP1DownKey = false;
+		}
+		if(!p1GoingRight) {
+			mustReleaseP1RightKey = false;
+		}
+		if(!p1GoingLeft) {
+			mustReleaseP1LeftKey = false;
+		}
+		if(!p2GoingUp) {
+			mustReleaseP2UpKey = false;
+		}
+		if(!p2GoingDown) {
+			mustReleaseP2DownKey = false;
+		}
+		if(!p2GoingRight) {
+			mustReleaseP2RightKey = false;
+		}
+		if(!p2GoingLeft) {
+			mustReleaseP2LeftKey = false;
+		}
+		if(!p3GoingUp) {
+			mustReleaseP3UpKey = false;
+		}
+		if(!p3GoingDown) {
+			mustReleaseP3DownKey = false;
+		}
+		if(!p3GoingRight) {
+			mustReleaseP3RightKey = false;
+		}
+		if(!p3GoingLeft) {
+			mustReleaseP3LeftKey = false;
+		}
+		if(!p4GoingUp) {
+			mustReleaseP4UpKey = false;
+		}
+		if(!p4GoingDown) {
+			mustReleaseP4DownKey = false;
+		}
+		if(!p4GoingRight) {
+			mustReleaseP4RightKey = false;
+		}
+		if(!p4GoingLeft) {
+			mustReleaseP4LeftKey = false;
+		}
+	}
+	}
+}
+
+//The 'keyboard' helper function
+function keyboard(keyCode)
+{
+	var key = {};
+	key.code = keyCode;
+	key.isDown = false;
+	key.isUp = true;
+	key.press = undefined;
+	key.release = undefined;
+	//The 'downHandler'
+	key.downHandler = event =>
+	{
+		if (event.keyCode === key.code)
+		{
+			if (key.press)
+			{
+				key.press();
+				key.isDown = true;
+				key.isUp = false;
+			}
+		}
+		event.preventDefault();
+	};
+	//The 'upHandler'
+	key.upHandler = event =>
+	{
+		if (event.keyCode === key.code)
+		{
+			if (key.isDown && key.release)
+			{
+				key.release();
+				key.isDown = false;
+				key.isUp = true;
+			}
+		}
+		event.preventDefault();
+	};
+	//Attach event listeners
+	window.addEventListener("keydown", key.downHandler.bind(key), false);
+	window.addEventListener("keyup", key.upHandler.bind(key), false);
+	return key;
+}
+</script>
+</body>
+</html>
